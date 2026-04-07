@@ -2,11 +2,23 @@
 
 ## What This Is
 
-A multiplayer educational simulation game where students compete as hotel revenue managers, making real-time decisions on guest bookings while learning about demand forecasting, pricing strategy, and risk management. Teachers create sessions, students join lobbies, and compete across multiple weeks with ML-generated guest profiles. The frontend uses a Claymorphism ("Organic Brutalism") design from Stitch.
+An educational simulation game where students compete as hotel revenue managers, setting room prices each week and watching demand respond. The game teaches pricing strategy, demand forecasting, and revenue optimization through a multi-week simulation with ML-generated market demand. The frontend uses a Claymorphism ("Organic Brutalism") design.
 
 ## Core Value
 
-Students can play through a complete hotel revenue management simulation with real-time guest decisions, seeing the consequences of their choices through detailed analytics and insights.
+Students learn revenue management by setting room prices and observing how the market responds — pricing too high means empty rooms, too low means lost revenue. Each week's demand is driven by ML models, creating realistic market behavior.
+
+## Current Milestone: v1.1 Pricing Strategy Pivot
+
+**Goal:** Pivot core gameplay from accept/reject individual guests to a pricing strategy mechanic where students set room prices, demand auto-simulates, and revenue is determined by market response.
+
+**Target features:**
+- Pricing interface — set $/night for each room tier before each week
+- Demand simulation — backend auto-matches generated guests against player prices
+- Week results — revenue, occupancy, demand lost, rooms empty
+- Multi-week progression with varying demand levels
+- Analytics & insights — pricing decisions vs optimal pricing
+- Dashboard & session management (existing, adapted)
 
 ## Requirements
 
@@ -19,58 +31,51 @@ Students can play through a complete hotel revenue management simulation with re
 - ✓ Profile service — FastAPI guest generation microservice — existing
 - ✓ Database schema — 10 migrations, 7 tables — existing
 - ✓ Room inventory — LOS-aware calendar system in Redis — existing
+- ✓ Frontend scaffold — React 19, Vite 8, TailwindCSS 4, auth screens, dashboard — existing
 
 ### Active
 
 <!-- Current scope. Building toward these. -->
 
-- [ ] Implement Landing/Auth screens (Teacher + Student views)
-- [ ] Implement Student Sign Up screen
-- [ ] Implement Teacher Dashboard screen
-- [ ] Implement Student Dashboard screen
-- [ ] Implement Create New Session popup
-- [ ] Implement Lobby screen
-- [ ] Implement Main Game - Guest Card screen
-- [ ] Implement Game Stats Panel
-- [ ] Implement Week Results Overlay
-- [ ] Implement Final Results screen
-- [ ] Implement Educational Insights screen
-- [ ] Implement Insights - Risk & Segment Reports
-- [ ] Implement Insights - Patterns & Comparison
-- [ ] Implement Insights - Lead Time & LOS Impact
-- [ ] Connect all screens to backend via Socket.io + REST APIs
+- [ ] Pricing interface — students set prices per room tier per week
+- [ ] Demand simulation engine — auto-resolve guest bookings based on price vs willingness-to-pay
+- [ ] Week results display — revenue, occupancy, lost demand breakdown
+- [ ] Multi-week game loop — progression through weeks with demand variation
+- [ ] Final results & leaderboard — cumulative performance ranking
+- [ ] Educational insights — pricing analytics, optimal pricing comparison
+- [ ] Backend refactor — replace accept/reject decision flow with pricing submission + simulation
 
 ### Out of Scope
 
-- Native mobile app — web-first, responsive later
-- Leaderboard screens — explicitly removed from Stitch design ("No Leaderboard" variants)
+- Native mobile app — web-first
 - Admin panel — not in current design
 - Real-time chat between students — not in scope
+- Accept/reject individual guest mechanic — replaced by pricing strategy
+- Timer-based guest decisions — replaced by strategic pricing phase
 
 ## Context
 
 - **Backend:** Fully built Node.js/Express server with Socket.io, JWT auth, MySQL, Redis
-- **Frontend design:** 15 screens in Stitch project `16500353157473194410` — "Claymorphism Hotel Management UI"
-- **Design system:** Organic Brutalism (terracotta, block shadows, pill shapes, Plus Jakarta Sans)
-- **Approach:** Implement one screen at a time, matching Stitch HTML/CSS exactly
-- **Stack:** React 19, Vite 8, TailwindCSS 4, Zustand, Socket.io-client, Recharts, Axios
+- **Frontend:** React 19, Vite 8, TailwindCSS 4 with auth screens, dashboard, game page (needs refactor)
+- **Design system:** Claymorphism (terracotta, block shadows, pill shapes, Plus Jakarta Sans)
+- **ML Pipeline:** CTGAN guest generator + LightGBM ADR/risk models — guests have willingness-to-pay (ADR)
+- **Key insight:** Guest ADR from ML pipeline becomes the price sensitivity threshold for the simulation
 
 ## Constraints
 
-- **Design fidelity**: Must match Stitch designs exactly — Claymorphism aesthetic with block shadows, no blurs, no gradients
-- **Tech stack**: React 19 + Vite 8 + TailwindCSS 4 (already scaffolded in `hotel-game/frontend/`)
-- **Backend compatibility**: Must integrate with existing Socket.io events and REST API endpoints
+- **Design fidelity**: Claymorphism aesthetic with block shadows, no blurs, no gradients
+- **Tech stack**: React 19 + Vite 8 + TailwindCSS 4
+- **Backend compatibility**: Reuse existing auth, sessions, Redis infrastructure
 - **Education context**: BTP (Bachelor's Thesis Project)
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Claymorphism design system | Pre-designed in Stitch with 15 screens | — Pending |
-| TailwindCSS 4 for styling | Already installed in frontend scaffold | — Pending |
-| Zustand for state management | Lightweight, already installed | — Pending |
-| Screen-by-screen implementation | User preference for incremental progress | — Pending |
-| No leaderboard screens | Explicitly excluded in Stitch design variants | — Pending |
+| Pivot to pricing strategy | More educational — teaches pricing optimization vs binary accept/reject | — Active |
+| Guest ADR = willingness to pay | CTGAN already generates realistic ADR — reuse as price sensitivity | — Active |
+| Keep existing infrastructure | Auth, sessions, Redis, Socket.io all still needed | — Active |
+| Remove timer-based decisions | Pricing is a strategic, not time-pressured, activity | — Active |
 
 ## Evolution
 
@@ -90,4 +95,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-07 after initialization*
+*Last updated: 2026-04-07 after milestone v1.1 pivot*
