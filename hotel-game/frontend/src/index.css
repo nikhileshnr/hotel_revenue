@@ -1,0 +1,132 @@
+@import "tailwindcss";
+
+/* ===================================================================
+   CLAYMORPHISM DESIGN SYSTEM — "The Tactile Tactician"
+   Extracted from Stitch project 16500353157473194410
+   =================================================================== */
+
+/* --- Google Fonts loaded via index.html link tags --- */
+
+/* --- TailwindCSS v4 Theme (matches Stitch config exactly) --- */
+@theme {
+  /* --- Colors: Material Design 3 tokens --- */
+  --color-primary: #9f402d;
+  --color-primary-container: #e2725b;
+  --color-primary-fixed: #ffdad3;
+  --color-primary-fixed-dim: #ffb4a5;
+  --color-on-primary: #ffffff;
+  --color-on-primary-container: #5a0d02;
+  --color-on-primary-fixed: #3e0500;
+  --color-on-primary-fixed-variant: #802918;
+
+  --color-secondary: #685e3e;
+  --color-secondary-container: #f0e2ba;
+  --color-secondary-fixed: #f0e2ba;
+  --color-secondary-fixed-dim: #d4c69f;
+  --color-on-secondary: #ffffff;
+  --color-on-secondary-container: #6e6444;
+  --color-on-secondary-fixed: #221b03;
+  --color-on-secondary-fixed-variant: #4f4629;
+
+  --color-tertiary: #3b6934;
+  --color-tertiary-container: #6e9f64;
+  --color-tertiary-fixed: #bcf0ae;
+  --color-tertiary-fixed-dim: #a1d494;
+  --color-on-tertiary: #ffffff;
+  --color-on-tertiary-container: #043405;
+  --color-on-tertiary-fixed: #002201;
+  --color-on-tertiary-fixed-variant: #23501e;
+
+  --color-error: #ba1a1a;
+  --color-error-container: #ffdad6;
+  --color-on-error: #ffffff;
+  --color-on-error-container: #93000a;
+
+  --color-surface: #faf9f6;
+  --color-surface-bright: #faf9f6;
+  --color-surface-dim: #dbdad7;
+  --color-surface-tint: #9f402d;
+  --color-surface-variant: #e3e2e0;
+  --color-surface-container: #efeeeb;
+  --color-surface-container-low: #f4f3f1;
+  --color-surface-container-high: #e9e8e5;
+  --color-surface-container-highest: #e3e2e0;
+  --color-surface-container-lowest: #ffffff;
+
+  --color-on-surface: #1a1c1a;
+  --color-on-surface-variant: #56423e;
+  --color-on-background: #1a1c1a;
+  --color-background: #faf9f6;
+
+  --color-outline: #89726d;
+  --color-outline-variant: #ddc0ba;
+
+  --color-inverse-surface: #2f312f;
+  --color-inverse-on-surface: #f2f1ee;
+  --color-inverse-primary: #ffb4a5;
+
+  /* --- Border Radius --- */
+  --radius-DEFAULT: 1rem;
+  --radius-lg: 2rem;
+  --radius-xl: 3rem;
+  --radius-full: 9999px;
+
+  /* --- Font Families --- */
+  --font-headline: "Plus Jakarta Sans", sans-serif;
+  --font-body: "Be Vietnam Pro", sans-serif;
+  --font-label: "Be Vietnam Pro", sans-serif;
+}
+
+/* --- Base Styles --- */
+body {
+  font-family: "Be Vietnam Pro", sans-serif;
+  background-color: var(--color-surface);
+  color: var(--color-on-surface);
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100svh;
+}
+
+/* ===================================================================
+   CLAYMORPHISM UTILITY CLASSES
+   Hard shadows, inset shadows, button shadows — 0 blur, matte finish
+   =================================================================== */
+
+/* Card shadow — 12px offset, dark terracotta */
+.clay-card-shadow {
+  box-shadow: 12px 12px 0 0 rgba(62, 5, 0, 0.4);
+}
+
+/* Small card shadow — 8px offset */
+.clay-card-shadow-sm {
+  box-shadow: 8px 8px 0 0 rgba(62, 5, 0, 0.3);
+}
+
+/* Button shadow — green bottom shadow (for tertiary buttons) */
+.clay-button-shadow {
+  box-shadow: 0 6px 0 0 #23501e;
+}
+
+/* Button shadow active — pressed state */
+.clay-button-shadow-active {
+  box-shadow: 0 4px 0 0 #043405;
+}
+
+/* Primary button shadow — terracotta bottom shadow */
+.clay-button-shadow-primary {
+  box-shadow: 0 6px 0 0 #5a0d02;
+}
+
+/* Inset shadow — pressed/input field look */
+.clay-inset-shadow {
+  box-shadow: inset 4px 4px 0 0 rgba(0, 0, 0, 0.1);
+}
+
+/* Material Symbols configuration */
+.material-symbols-outlined {
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+}
