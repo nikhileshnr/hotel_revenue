@@ -51,23 +51,23 @@
 
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
-| PRICE-01 | — | Pending |
-| PRICE-02 | — | Pending |
-| PRICE-03 | — | Pending |
-| FLOW-01 | — | Pending |
-| FLOW-02 | — | Pending |
-| FLOW-03 | — | Pending |
-| UI-01 | — | Pending |
-| UI-02 | — | Pending |
-| UI-03 | — | Pending |
-| RES-01 | — | Pending |
-| RES-02 | — | Pending |
-| RES-03 | — | Pending |
-| INS-01 | — | Pending |
-| INS-02 | — | Pending |
-| INS-03 | — | Pending |
-| INFRA-01 | — | Pending |
-| INFRA-02 | — | Pending |
+| PRICE-01 | 8 | Pending |
+| PRICE-02 | 8 | Pending |
+| PRICE-03 | 8 | Pending |
+| FLOW-01 | 8 | Pending |
+| FLOW-02 | 8 | Pending |
+| FLOW-03 | 8 | Pending |
+| UI-01 | 9 | Pending |
+| UI-02 | 9 | Pending |
+| UI-03 | 9 | Pending |
+| RES-01 | 10 | Pending |
+| RES-02 | 10 | Pending |
+| RES-03 | 10 | Pending |
+| INS-01 | 12 | Pending |
+| INS-02 | 12 | Pending |
+| INS-03 | 12 | Pending |
+| INFRA-01 | 11 | Pending |
+| INFRA-02 | 11 | Pending |
 
 ---
 *Last updated: 2026-04-07*

@@ -5,28 +5,32 @@
 See: .planning/PROJECT.md (updated 2026-04-07)
 
 **Core value:** Students learn revenue management by setting room prices and observing market response
-**Current focus:** Milestone v1.1 — Pricing Strategy Pivot (defining requirements)
+**Current focus:** Phase 8 — Backend Pricing Engine
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 8
 Plan: —
-Status: Defining requirements
-Last activity: 2026-04-07 — Milestone v1.1 started
+Status: Not started
+Last activity: 2026-04-07 — Roadmap created (5 phases, 16 requirements)
 
 ## Progress
 
-| Phase | Status | Progress |
-|-------|--------|----------|
-| — | Defining requirements | 0% |
+| Phase | Name | Status | Progress |
+|-------|------|--------|----------|
+| 8 | Backend Pricing Engine | ○ | 0% |
+| 9 | Pricing UI — Game Screen Refactor | ○ | 0% |
+| 10 | Week Results & Game Completion | ○ | 0% |
+| 11 | Leaderboard & Dashboard Polish | ○ | 0% |
+| 12 | Educational Insights & Analytics | ○ | 0% |
 
 ## Context
 
 - Stitch project ID: `16500353157473194410`
 - Design system: Claymorphism / "The Tactile Tactician"
-- Backend: fully built and verified
-- Frontend: React 19 + Vite 8 scaffold with auth, dashboard, game page (needs refactor for pricing mechanic)
-- ML Pipeline: CTGAN + LightGBM guest generation with ADR (willingness-to-pay)
+- Backend: fully built — needs refactor for pricing mechanic
+- Frontend: React 19 + Vite 8 with auth, dashboard, game page — needs refactor
+- ML Pipeline: CTGAN + LightGBM — guest ADR = willingness-to-pay threshold
 
 ---
-*Last updated: 2026-04-07 after milestone v1.1 initialization*
+*Last updated: 2026-04-07 after roadmap creation*

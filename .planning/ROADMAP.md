@@ -1,165 +1,161 @@
-# Roadmap: Hotel Revenue Management Game — Frontend
+# Roadmap: Hotel Revenue Management Game — v1.1 Pricing Strategy Pivot
 
 **Created:** 2026-04-07
-**Milestone:** v1.0 — Complete Frontend
-**Phases:** 7 | **Requirements:** 27
+**Milestone:** v1.1 — Pricing Strategy Pivot
+**Phases:** 5 | **Requirements:** 16
 
-## Phase 1: Foundation & Design System
+## Phase 8: Backend Pricing Engine
 
-**Goal:** Set up routing, state management, API/socket utilities, and the Claymorphism design system as reusable CSS/components.
+**Goal:** Replace the accept/reject decision flow with a pricing submission + demand simulation engine. Student submits prices per room tier, backend generates guests, auto-resolves bookings, calculates revenue.
 
-**Requirements:** FOUND-01, FOUND-02, FOUND-03, FOUND-04, FOUND-05
+**Requirements:** PRICE-01, PRICE-02, PRICE-03, FLOW-01, FLOW-02, FLOW-03
+
+**UI hint**: no
+
+**Success Criteria:**
+1. `player:submit_prices` socket event accepts `{ standard, mid, premium, suite }` prices and stores them
+2. Backend generates guests for the week, auto-books each guest whose ADR ≥ player price for their room tier
+3. Cancellations and no-shows are applied to booked guests using existing ML probabilities
+4. `week:results` event emits revenue, occupancy, guests_booked, guests_turned_away, adr_achieved per tier
+5. Week advances correctly through configurable total_weeks with varying demand levels
+6. Full game loop works: prices → simulate → results → next week → ... → game:completed
+
+**Files to modify:**
+- `backend/src/socket/handlers/gameHandler.js` — new `player:submit_prices` event
+- `backend/src/socket/handlers/decisionHandler.js` — remove/replace with pricing handler
+- `backend/src/services/decisionService.js` — replace with `pricingService.js`
+- `backend/src/game/weekOrchestrator.js` — refactor week flow for pricing mechanic
+- `backend/src/services/weekResolutionService.js` — adapt for auto-booked guests
+
+---
+
+## Phase 9: Pricing UI — Game Screen Refactor
+
+**Goal:** Replace the guest card + accept/reject UI with a pricing interface. Show room tiers, price inputs, inventory, and submit button.
+
+**Requirements:** UI-01, UI-02, UI-03
 
 **UI hint**: yes
 
 **Success Criteria:**
-1. React Router configured with public and protected route wrappers
-2. Zustand auth store manages JWT token and user info
-3. Socket.io-client connects with JWT and emits/receives test events
-4. Claymorphism design tokens (colors, shadows, fonts, spacing) extracted from Stitch and available as CSS/Tailwind utilities
-5. Axios API utility sends authenticated requests to backend
+1. GamePage shows 4 room tier cards with price input fields (slider + number input)
+2. Suggested price range shown per tier based on demand level hint
+3. Room availability grid displays current inventory (rooms per tier per day)
+4. Submit button emits `player:submit_prices` and shows loading/simulation state
+5. Claymorphism styling consistent with existing design system
 
-**Stitch Screens:** None (infrastructure phase — design tokens extracted from all screens)
+**Depends on:** Phase 8
 
----
-
-## Phase 2: Authentication Screens
-
-**Goal:** Implement Landing/Auth pages for Teacher and Student, plus Student Sign Up — matching Stitch designs exactly.
-
-**Requirements:** AUTH-01, AUTH-02, AUTH-03, AUTH-04
-
-**UI hint**: yes
-
-**Success Criteria:**
-1. Teacher landing page matches Stitch "Landing / Auth - Teacher View" screen
-2. Student landing page matches Stitch "Landing / Auth - Student View" screen
-3. Student sign up form matches Stitch "Student Sign Up" screen
-4. Login/register calls backend `/api/auth` and stores JWT in Zustand + localStorage
-
-**Stitch Screens:**
-- `97abf0af9e19468fa784e205e9928b0a` — Landing / Auth - Student View
-- `be900d9e32ee4743a13b600ad1dc8199` — Landing / Auth - Teacher View
-- `f96060cc70c34e5a9a57c216cead13d3` — Student Sign Up
+**Files to modify:**
+- `frontend/src/pages/GamePage.jsx` — complete rewrite for pricing mechanic
+- `frontend/src/components/PricingCard.jsx` — new component for each room tier
+- `frontend/src/components/InventoryGrid.jsx` — extracted room grid component
 
 ---
 
-## Phase 3: Dashboards & Session Management
+## Phase 10: Week Results & Game Completion
 
-**Goal:** Implement Teacher Dashboard, Student Dashboard, and Create Session popup — matching Stitch designs exactly.
-
-**Requirements:** DASH-01, DASH-02, DASH-03
-
-**UI hint**: yes
-
-**Success Criteria:**
-1. Teacher dashboard matches Stitch "Dashboard (No Leaderboard)" screen
-2. Student dashboard matches Stitch "Student Dashboard" screen
-3. Create session popup matches Stitch "Create New Session Popup" screen
-4. Sessions list fetched from backend `/api/sessions`
-5. Create session calls backend and navigates to lobby
-
-**Stitch Screens:**
-- `ddc50a9dc5c440ec812e4bf62959752d` — Dashboard (No Leaderboard)
-- `869fe9ca226c4792b503c7526857876c` — Student Dashboard
-- `0033640fbbb74639ac88b34178bfe260` — Create New Session Popup
-
----
-
-## Phase 4: Lobby
-
-**Goal:** Implement pre-game lobby where players see session info, connected players, and teacher can start the game.
-
-**Requirements:** LOBBY-01, LOBBY-02, LOBBY-03
-
-**UI hint**: yes
-
-**Success Criteria:**
-1. Lobby screen matches Stitch "Lobby (No Leaderboard)" screen
-2. Socket.io events `lobby:join`, `lobby:player_joined`, `lobby:player_left` handled
-3. Teacher sees "Start Game" button; students see waiting state
-4. Game start redirects all players to game screen
-
-**Stitch Screens:**
-- `6e28357badca4171817e5e7e84625699` — Lobby (No Leaderboard)
-
----
-
-## Phase 5: Core Gameplay
-
-**Goal:** Implement the main game loop — guest cards arriving, player decisions (accept/reject), room inventory, and live stats.
-
-**Requirements:** GAME-01, GAME-02, GAME-03, GAME-04, GAME-05
-
-**UI hint**: yes
-
-**Success Criteria:**
-1. Guest card screen matches Stitch "Main Game - Guest Card" screen
-2. Game stats panel matches Stitch "Game Stats Panel" screen
-3. Guest cards display all profile data (room type, LOS, segment, ADR, risk badge)
-4. Accept/reject with room tier selection sends `player:decision` Socket.io event
-5. Room inventory calendar updates in real-time after decisions
-6. Stats panel shows live revenue, occupancy rate, and decision counts
-
-**Stitch Screens:**
-- `ea64eeb82b8e4dafb1afc706d9aebbb1` — Main Game - Guest Card (Timer Removed)
-- `825fbf53955b413a83a5e49d4a4412c1` — Game Stats Panel
-
----
-
-## Phase 6: Results Screens
-
-**Goal:** Implement week results overlay and final game results — matching Stitch designs exactly.
+**Goal:** Implement week results overlay showing simulation outcomes, and final results screen with cumulative performance.
 
 **Requirements:** RES-01, RES-02, RES-03
 
 **UI hint**: yes
 
 **Success Criteria:**
-1. Week results overlay matches Stitch "Week Results Overlay" screen
-2. Final results screen matches Stitch "Final Results (No Leaderboard)" screen
-3. `week:results` Socket.io event populates results overlay
-4. Teacher can advance week or view final results
-5. `game:completed` event triggers final results screen
+1. Week results overlay shows: revenue earned, occupancy %, guests booked vs turned away, ADR per tier
+2. Visual breakdown of which segments booked and which were priced out
+3. Final results screen shows cumulative revenue, avg occupancy, and comparison to optimal strategy
+4. Week-by-week history chart with Recharts (revenue + occupancy trend lines)
+5. Auto-advance to next week or navigate to final results on game:completed
 
-**Stitch Screens:**
-- `a83451701bba46f2af9c172a3d56539f` — Week Results Overlay
-- `a2e20a733c124eaf978d8c3d8be0ffb4` — Final Results (No Leaderboard)
+**Depends on:** Phase 9
+
+**Files to modify:**
+- `frontend/src/pages/GamePage.jsx` — add results overlay state
+- `frontend/src/components/WeekResultsOverlay.jsx` — new component
+- `frontend/src/pages/ResultsPage.jsx` — refactor for pricing-based metrics
+- `frontend/src/components/RevenueTrendChart.jsx` — new Recharts component
 
 ---
 
-## Phase 7: Educational Insights
+## Phase 11: Leaderboard & Dashboard Polish
 
-**Goal:** Implement the 4 insights/analytics screens with charts and data visualizations using Recharts.
+**Goal:** Wire up leaderboard with cumulative revenue ranking and polish dashboard for the pricing flow.
 
-**Requirements:** INS-01, INS-02, INS-03, INS-04
+**Requirements:** INFRA-01, INFRA-02
 
 **UI hint**: yes
 
 **Success Criteria:**
-1. Educational insights page matches Stitch "Educational Insights" screen
-2. Risk & segment reports match Stitch "Insights - Risk & Segment Reports" screen
-3. Patterns & comparison matches Stitch "Insights - Patterns & Comparison" screen
-4. Lead time & LOS impact matches Stitch "Insights - Lead Time & LOS Impact" screen
-5. Charts rendered with Recharts using Claymorphism styling
+1. Dashboard session cards show pricing-relevant stats (avg price set, revenue, occupancy)
+2. Delete session button works with confirmation
+3. Leaderboard page ranks all players by cumulative revenue
+4. Leaderboard supports branch filtering
 
-**Stitch Screens:**
-- `9728057740664b418e90b332105da543` — Educational Insights
-- `9d316741d6a442d6a42b364d9c43b476` — Insights - Risk & Segment Reports (Synced)
-- `08802950198f42349e8180abfa1ff3d3` — Insights - Patterns & Comparison (Synced)
-- `5e0cf73ae18d4a31b41f2fe62afc3fb1` — Insights - Lead Time & LOS Impact (Layout Fixed)
+**Depends on:** Phase 10
+
+**Files to modify:**
+- `frontend/src/pages/Dashboard.jsx` — update session card stats
+- `frontend/src/pages/LeaderboardPage.jsx` — polish and verify
+- `backend/src/services/leaderboardService.js` — verify scoring
+
+---
+
+## Phase 12: Educational Insights & Analytics
+
+**Goal:** Build post-game analytics screens that help students understand their pricing decisions — what worked, what didn't, and what optimal pricing would have looked like.
+
+**Requirements:** INS-01, INS-02, INS-03
+
+**UI hint**: yes
+
+**Success Criteria:**
+1. Pricing vs market WTP chart — player's prices overlaid on guest ADR distribution
+2. Segment capture analysis — % of each segment captured at player's price points
+3. Optimal pricing analysis — backend calculates revenue-maximizing prices, shows comparison
+4. All charts use Recharts with Claymorphism styling
+5. Accessible from results page and dashboard
+
+**Depends on:** Phase 10
+
+**Files to modify:**
+- `frontend/src/pages/InsightsPage.jsx` — refactor for pricing analytics
+- `backend/src/routes/sessions.js` — add endpoint for optimal pricing calculation
+- `frontend/src/components/PricingComparisonChart.jsx` — new chart
+- `frontend/src/components/SegmentCaptureChart.jsx` — new chart
 
 ---
 
 ## Summary
 
-| # | Phase | Requirements | Stitch Screens |
-|---|-------|-------------|----------------|
-| 1 | Foundation & Design System | 5 | 0 (tokens) |
-| 2 | Authentication Screens | 4 | 3 |
-| 3 | Dashboards & Session Management | 3 | 3 |
-| 4 | Lobby | 3 | 1 |
-| 5 | Core Gameplay | 5 | 2 |
-| 6 | Results Screens | 3 | 2 |
-| 7 | Educational Insights | 4 | 4 |
-| **Total** | | **27** | **15** |
+| # | Phase | Requirements | Depends On |
+|---|-------|-------------|------------|
+| 8 | Backend Pricing Engine | PRICE-01, PRICE-02, PRICE-03, FLOW-01, FLOW-02, FLOW-03 | — |
+| 9 | Pricing UI — Game Screen Refactor | UI-01, UI-02, UI-03 | Phase 8 |
+| 10 | Week Results & Game Completion | RES-01, RES-02, RES-03 | Phase 9 |
+| 11 | Leaderboard & Dashboard Polish | INFRA-01, INFRA-02 | Phase 10 |
+| 12 | Educational Insights & Analytics | INS-01, INS-02, INS-03 | Phase 10 |
+
+## Requirement Coverage
+
+All 16 requirements mapped. No gaps.
+
+| REQ-ID | Phase |
+|--------|-------|
+| PRICE-01 | 8 |
+| PRICE-02 | 8 |
+| PRICE-03 | 8 |
+| FLOW-01 | 8 |
+| FLOW-02 | 8 |
+| FLOW-03 | 8 |
+| UI-01 | 9 |
+| UI-02 | 9 |
+| UI-03 | 9 |
+| RES-01 | 10 |
+| RES-02 | 10 |
+| RES-03 | 10 |
+| INFRA-01 | 11 |
+| INFRA-02 | 11 |
+| INS-01 | 12 |
+| INS-02 | 12 |
+| INS-03 | 12 |
