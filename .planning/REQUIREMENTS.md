@@ -1,113 +1,73 @@
-# Requirements: Hotel Revenue Management Game — Frontend
+# Requirements: Hotel Revenue Management Game — v1.1 Pricing Strategy Pivot
 
-**Defined:** 2026-04-07
-**Core Value:** Students can play through a complete hotel revenue management simulation with real-time guest decisions, seeing consequences through detailed analytics
+**Created:** 2026-04-07
+**Milestone:** v1.1 — Pricing Strategy Pivot
+**Total Requirements:** 16
 
-## v1 Requirements
+## Backend — Pricing Engine
 
-Requirements for React frontend implementation. Each maps to roadmap phases.
+- [ ] **PRICE-01**: Student can submit room prices ($/night) for each of 4 room tiers before a week starts
+- [ ] **PRICE-02**: Backend simulates demand — each generated guest auto-books if player price ≤ guest ADR (willingness to pay), skips otherwise
+- [ ] **PRICE-03**: Backend resolves week outcomes: cancellations, no-shows applied to booked guests, final revenue calculated
 
-### Foundation
+## Game Flow
 
-- [ ] **FOUND-01**: App has routing (React Router) with auth-protected routes
-- [ ] **FOUND-02**: App uses Zustand store for auth state (JWT token, user info)
-- [ ] **FOUND-03**: App uses Socket.io-client connected with JWT auth
-- [ ] **FOUND-04**: App implements Claymorphism design system (block shadows, pill shapes, terracotta palette, Plus Jakarta Sans)
-- [ ] **FOUND-05**: API utility module wraps Axios with base URL + auth headers
+- [ ] **FLOW-01**: Game progresses through configurable number of weeks (default 20)
+- [ ] **FLOW-02**: Each week has a demand level (low/medium/high) that affects guest volume and ADR distribution
+- [ ] **FLOW-03**: Week lifecycle: set prices → submit → simulation runs → results displayed → next week
 
-### Authentication
+## Frontend — Pricing UI
 
-- [ ] **AUTH-01**: Teacher can view landing page and log in
-- [ ] **AUTH-02**: Student can view landing page and log in
-- [ ] **AUTH-03**: Student can sign up with name, email, password
-- [ ] **AUTH-04**: Auth state persists across browser refresh (JWT in localStorage)
+- [ ] **UI-01**: Pricing screen shows 4 room tiers with price input sliders/fields and suggested price ranges
+- [ ] **UI-02**: Room availability grid shows current inventory before pricing
+- [ ] **UI-03**: Submit button locks in prices and triggers week simulation
 
-### Dashboard
+## Frontend — Results
 
-- [ ] **DASH-01**: Teacher can view dashboard with session list and quick actions
-- [ ] **DASH-02**: Student can view dashboard with joined sessions and stats
-- [ ] **DASH-03**: Teacher can create a new session via popup (hotel type, weeks, simulated month)
+- [ ] **RES-01**: Week results overlay shows: revenue earned, occupancy rate, guests turned away (priced out), ADR achieved
+- [ ] **RES-02**: Final results screen shows cumulative revenue, average occupancy, ranking vs optimal strategy
+- [ ] **RES-03**: Week-by-week history with trend charts (revenue, occupancy over time)
 
-### Lobby
+## Analytics & Insights
 
-- [ ] **LOBBY-01**: Players see lobby with session info and connected players
-- [ ] **LOBBY-02**: Teacher can start the game from lobby
-- [ ] **LOBBY-03**: Real-time player join/leave updates via Socket.io
+- [ ] **INS-01**: Post-game insights show pricing vs market willingness-to-pay comparison
+- [ ] **INS-02**: Segment breakdown — which market segments were captured/lost at each price point
+- [ ] **INS-03**: Optimal pricing analysis — what prices would have maximized revenue
 
-### Gameplay
+## Infrastructure
 
-- [ ] **GAME-01**: Player sees guest cards arriving one by one with all guest details
-- [ ] **GAME-02**: Player can accept (with room tier selection) or reject each guest
-- [ ] **GAME-03**: Player sees remaining room inventory (7-day calendar view)
-- [ ] **GAME-04**: Game stats panel shows live revenue, occupancy, decisions made
-- [ ] **GAME-05**: Decision confirmations update UI in real-time
-
-### Results
-
-- [ ] **RES-01**: Week results overlay shows per-player stats (revenue, cancellations, no-shows, occupancy)
-- [ ] **RES-02**: Teacher can advance to next week from results screen
-- [ ] **RES-03**: Final results screen shows comprehensive game summary with all weeks
-
-### Insights
-
-- [ ] **INS-01**: Educational insights page with key learning summaries
-- [ ] **INS-02**: Risk & segment analysis with charts and breakdowns
-- [ ] **INS-03**: Pattern & comparison analysis across weeks/players
-- [ ] **INS-04**: Lead time & LOS impact analysis with visualizations
-
-## v2 Requirements
-
-- **LEAD-01**: Persistent leaderboard across sessions
-- **RESP-01**: Responsive mobile layout
-- **NOTIF-01**: In-app notifications for session invites
-- **EXPORT-01**: Export game results as CSV/PDF
+- [ ] **INFRA-01**: Dashboard shows sessions with continue/view results/delete
+- [ ] **INFRA-02**: Leaderboard ranks players by cumulative revenue across sessions
 
 ## Out of Scope
 
-| Feature | Reason |
-|---------|--------|
-| Leaderboard screens | Explicitly excluded in Stitch design variants |
-| Admin panel | Not in current design |
-| Real-time chat | High complexity, not core to learning |
-| Native mobile app | Web-first approach |
+- Accept/reject individual guest mechanic — replaced by pricing strategy
+- Timer-based guest decisions — replaced by strategic pricing phase
+- Teacher-controlled lobbies — self-service student architecture
+- Native mobile app
+- Real-time chat
 
 ## Traceability
 
-| Requirement | Phase | Status |
-|-------------|-------|--------|
-| FOUND-01 | Phase 1 | Pending |
-| FOUND-02 | Phase 1 | Pending |
-| FOUND-03 | Phase 1 | Pending |
-| FOUND-04 | Phase 1 | Pending |
-| FOUND-05 | Phase 1 | Pending |
-| AUTH-01 | Phase 2 | Pending |
-| AUTH-02 | Phase 2 | Pending |
-| AUTH-03 | Phase 2 | Pending |
-| AUTH-04 | Phase 2 | Pending |
-| DASH-01 | Phase 3 | Pending |
-| DASH-02 | Phase 3 | Pending |
-| DASH-03 | Phase 3 | Pending |
-| LOBBY-01 | Phase 4 | Pending |
-| LOBBY-02 | Phase 4 | Pending |
-| LOBBY-03 | Phase 4 | Pending |
-| GAME-01 | Phase 5 | Pending |
-| GAME-02 | Phase 5 | Pending |
-| GAME-03 | Phase 5 | Pending |
-| GAME-04 | Phase 5 | Pending |
-| GAME-05 | Phase 5 | Pending |
-| RES-01 | Phase 6 | Pending |
-| RES-02 | Phase 6 | Pending |
-| RES-03 | Phase 6 | Pending |
-| INS-01 | Phase 7 | Pending |
-| INS-02 | Phase 7 | Pending |
-| INS-03 | Phase 7 | Pending |
-| INS-04 | Phase 7 | Pending |
-
-**Coverage:**
-- v1 requirements: 27 total
-- Mapped to phases: 27
-- Unmapped: 0 ✓
+| REQ-ID | Phase | Status |
+|--------|-------|--------|
+| PRICE-01 | — | Pending |
+| PRICE-02 | — | Pending |
+| PRICE-03 | — | Pending |
+| FLOW-01 | — | Pending |
+| FLOW-02 | — | Pending |
+| FLOW-03 | — | Pending |
+| UI-01 | — | Pending |
+| UI-02 | — | Pending |
+| UI-03 | — | Pending |
+| RES-01 | — | Pending |
+| RES-02 | — | Pending |
+| RES-03 | — | Pending |
+| INS-01 | — | Pending |
+| INS-02 | — | Pending |
+| INS-03 | — | Pending |
+| INFRA-01 | — | Pending |
+| INFRA-02 | — | Pending |
 
 ---
-*Requirements defined: 2026-04-07*
-*Last updated: 2026-04-07 after initial definition*
+*Last updated: 2026-04-07*
