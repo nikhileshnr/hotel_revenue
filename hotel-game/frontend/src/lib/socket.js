@@ -5,9 +5,11 @@ let socket = null;
 /**
  * Get or create the Socket.io client connection.
  * Connects with JWT token from localStorage for authentication.
+ * Maintains a single socket instance throughout the app lifecycle.
  */
 export function getSocket() {
-  if (socket && socket.connected) {
+  // Return existing socket (even if temporarily disconnected — it will auto-reconnect)
+  if (socket) {
     return socket;
   }
 
@@ -21,7 +23,7 @@ export function getSocket() {
     auth: { token },
     transports: ['websocket', 'polling'],
     reconnection: true,
-    reconnectionAttempts: 5,
+    reconnectionAttempts: 10,
     reconnectionDelay: 1000,
   });
 

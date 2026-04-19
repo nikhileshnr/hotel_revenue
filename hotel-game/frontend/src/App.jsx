@@ -1,18 +1,13 @@
 import { Routes, Route } from 'react-router-dom'
 import { PublicRoute, ProtectedRoute } from './components/RouteGuards'
 import LandingPage from './pages/LandingPage'
-
-// Placeholder pages — will be replaced in Phases 2-7
-function ComingSoon({ title }) {
-  return (
-    <div className="min-h-screen bg-surface flex items-center justify-center">
-      <div className="bg-surface-bright rounded-xl p-8 clay-card-shadow border-t-4 border-l-4 border-white text-center">
-        <h1 className="font-headline text-2xl font-extrabold text-primary mb-2">{title}</h1>
-        <p className="font-body text-on-surface-variant">Coming soon...</p>
-      </div>
-    </div>
-  )
-}
+import Dashboard from './pages/Dashboard'
+import GamePage from './pages/GamePage'
+import ClassicGamePage from './pages/ClassicGamePage'
+import ResultsPage from './pages/ResultsPage'
+import InsightsPage from './pages/InsightsPage'
+import LeaderboardPage from './pages/LeaderboardPage'
+import KPIDashboardPage from './pages/KPIDashboardPage'
 
 function App() {
   return (
@@ -27,28 +22,20 @@ function App() {
         }
       />
 
-      {/* Protected routes — placeholders for Phases 3-7 */}
+      {/* Protected routes */}
       <Route
         path="/dashboard"
         element={
           <ProtectedRoute>
-            <ComingSoon title="Teacher Dashboard" />
+            <Dashboard />
           </ProtectedRoute>
         }
       />
       <Route
-        path="/student-dashboard"
+        path="/leaderboard"
         element={
           <ProtectedRoute>
-            <ComingSoon title="Student Dashboard" />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/session/:sessionId/lobby"
-        element={
-          <ProtectedRoute>
-            <ComingSoon title="Lobby" />
+            <LeaderboardPage />
           </ProtectedRoute>
         }
       />
@@ -56,7 +43,15 @@ function App() {
         path="/session/:sessionId/game"
         element={
           <ProtectedRoute>
-            <ComingSoon title="Game" />
+            <GamePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/session/:sessionId/classic"
+        element={
+          <ProtectedRoute>
+            <ClassicGamePage />
           </ProtectedRoute>
         }
       />
@@ -64,7 +59,7 @@ function App() {
         path="/session/:sessionId/results"
         element={
           <ProtectedRoute>
-            <ComingSoon title="Results" />
+            <ResultsPage />
           </ProtectedRoute>
         }
       />
@@ -72,13 +67,31 @@ function App() {
         path="/session/:sessionId/insights"
         element={
           <ProtectedRoute>
-            <ComingSoon title="Insights" />
+            <InsightsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/session/:sessionId/kpis"
+        element={
+          <ProtectedRoute>
+            <KPIDashboardPage />
           </ProtectedRoute>
         }
       />
 
       {/* Catch-all */}
-      <Route path="*" element={<ComingSoon title="404 — Page Not Found" />} />
+      <Route
+        path="*"
+        element={
+          <div className="min-h-screen bg-surface flex items-center justify-center">
+            <div className="bg-surface-bright rounded-xl p-8 clay-card-shadow border-t-4 border-l-4 border-white text-center">
+              <h1 className="font-headline text-2xl font-extrabold text-primary mb-2">404 — Page Not Found</h1>
+              <p className="font-body text-on-surface-variant">This page doesn't exist.</p>
+            </div>
+          </div>
+        }
+      />
     </Routes>
   )
 }

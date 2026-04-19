@@ -1,0 +1,43 @@
+# ── Dependencies ──
+node_modules/
+venv/
+__pycache__/
+*.pyc
+
+# ── Build output ──
+dist/
+build/
+*.egg-info/
+
+# ── Environment (secrets) ──
+.env
+.env.local
+
+# ── Large data files (raw datasets — too big, not needed to run) ──
+demand_model/data/
+
+# ── IDE / OS ──
+.vscode/
+.idea/
+*.swp
+*.swo
+Thumbs.db
+.DS_Store
+
+# ── LaTeX build artifacts ──
+*.aux
+*.log
+*.out
+*.toc
+*.lof
+*.lot
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.bbl
+*.blg
+
+# ── Misc / working files ──
+misc/
+.planning/
+GEMINI.md

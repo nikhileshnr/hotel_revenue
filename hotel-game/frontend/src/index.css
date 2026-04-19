@@ -9,61 +9,61 @@
 
 /* --- TailwindCSS v4 Theme (matches Stitch config exactly) --- */
 @theme {
-  /* --- Colors: Material Design 3 tokens --- */
-  --color-primary: #9f402d;
-  --color-primary-container: #e2725b;
-  --color-primary-fixed: #ffdad3;
-  --color-primary-fixed-dim: #ffb4a5;
+  /* --- Colors: Espresso Lounge palette --- */
+  --color-primary: #4a3228;
+  --color-primary-container: #8b6f5e;
+  --color-primary-fixed: #f0d5c8;
+  --color-primary-fixed-dim: #d4aa98;
   --color-on-primary: #ffffff;
-  --color-on-primary-container: #5a0d02;
-  --color-on-primary-fixed: #3e0500;
-  --color-on-primary-fixed-variant: #802918;
+  --color-on-primary-container: #2a1410;
+  --color-on-primary-fixed: #1f0c08;
+  --color-on-primary-fixed-variant: #6b4a3e;
 
-  --color-secondary: #685e3e;
-  --color-secondary-container: #f0e2ba;
-  --color-secondary-fixed: #f0e2ba;
-  --color-secondary-fixed-dim: #d4c69f;
+  --color-secondary: #9a7b4f;
+  --color-secondary-container: #f0e4cc;
+  --color-secondary-fixed: #f0e4cc;
+  --color-secondary-fixed-dim: #d4c8a8;
   --color-on-secondary: #ffffff;
-  --color-on-secondary-container: #6e6444;
-  --color-on-secondary-fixed: #221b03;
-  --color-on-secondary-fixed-variant: #4f4629;
+  --color-on-secondary-container: #5a4a30;
+  --color-on-secondary-fixed: #2a1f0a;
+  --color-on-secondary-fixed-variant: #6b5a38;
 
-  --color-tertiary: #3b6934;
-  --color-tertiary-container: #6e9f64;
-  --color-tertiary-fixed: #bcf0ae;
-  --color-tertiary-fixed-dim: #a1d494;
+  --color-tertiary: #3a7d6e;
+  --color-tertiary-container: #6aad9a;
+  --color-tertiary-fixed: #b8ede0;
+  --color-tertiary-fixed-dim: #98d4c4;
   --color-on-tertiary: #ffffff;
-  --color-on-tertiary-container: #043405;
-  --color-on-tertiary-fixed: #002201;
-  --color-on-tertiary-fixed-variant: #23501e;
+  --color-on-tertiary-container: #0a3a2e;
+  --color-on-tertiary-fixed: #002018;
+  --color-on-tertiary-fixed-variant: #1a5a4c;
 
   --color-error: #ba1a1a;
   --color-error-container: #ffdad6;
   --color-on-error: #ffffff;
   --color-on-error-container: #93000a;
 
-  --color-surface: #faf9f6;
-  --color-surface-bright: #faf9f6;
-  --color-surface-dim: #dbdad7;
-  --color-surface-tint: #9f402d;
-  --color-surface-variant: #e3e2e0;
-  --color-surface-container: #efeeeb;
-  --color-surface-container-low: #f4f3f1;
-  --color-surface-container-high: #e9e8e5;
-  --color-surface-container-highest: #e3e2e0;
+  --color-surface: #faf7f2;
+  --color-surface-bright: #faf7f2;
+  --color-surface-dim: #dbd8d3;
+  --color-surface-tint: #4a3228;
+  --color-surface-variant: #e5e1dc;
+  --color-surface-container: #f0ede8;
+  --color-surface-container-low: #f5f2ed;
+  --color-surface-container-high: #eae7e2;
+  --color-surface-container-highest: #e5e1dc;
   --color-surface-container-lowest: #ffffff;
 
-  --color-on-surface: #1a1c1a;
-  --color-on-surface-variant: #56423e;
-  --color-on-background: #1a1c1a;
-  --color-background: #faf9f6;
+  --color-on-surface: #1c1b19;
+  --color-on-surface-variant: #504440;
+  --color-on-background: #1c1b19;
+  --color-background: #faf7f2;
 
-  --color-outline: #89726d;
-  --color-outline-variant: #ddc0ba;
+  --color-outline: #897872;
+  --color-outline-variant: #d5c4bc;
 
-  --color-inverse-surface: #2f312f;
-  --color-inverse-on-surface: #f2f1ee;
-  --color-inverse-primary: #ffb4a5;
+  --color-inverse-surface: #32302e;
+  --color-inverse-on-surface: #f2f0eb;
+  --color-inverse-primary: #d4aa98;
 
   /* --- Border Radius --- */
   --radius-DEFAULT: 1rem;
@@ -75,6 +75,24 @@
   --font-headline: "Plus Jakarta Sans", sans-serif;
   --font-body: "Be Vietnam Pro", sans-serif;
   --font-label: "Be Vietnam Pro", sans-serif;
+
+  /* --- Animations --- */
+  --animate-fade-in: fade-in 0.4s ease-out both;
+  --animate-slide-up: slide-up 0.4s ease-out both;
+  --animate-scale-in: scale-in 0.3s ease-out both;
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes slide-up {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes scale-in {
+    from { opacity: 0; transform: scale(0.92); }
+    to { opacity: 1; transform: scale(1); }
+  }
 }
 
 /* --- Base Styles --- */
@@ -91,6 +109,33 @@ body {
   min-height: 100svh;
 }
 
+/* --- Smooth global transitions --- */
+*, *::before, *::after {
+  scroll-behavior: smooth;
+}
+
+/* --- Selection color --- */
+::selection {
+  background-color: #8b6f5e;
+  color: #fff;
+}
+
+/* --- Custom Scrollbar (subtle, Material-like) --- */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(137, 114, 109, 0.3);
+  border-radius: 100px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(137, 114, 109, 0.5);
+}
+
 /* ===================================================================
    CLAYMORPHISM UTILITY CLASSES
    Hard shadows, inset shadows, button shadows — 0 blur, matte finish
@@ -98,27 +143,27 @@ body {
 
 /* Card shadow — 12px offset, dark terracotta */
 .clay-card-shadow {
-  box-shadow: 12px 12px 0 0 rgba(62, 5, 0, 0.4);
+  box-shadow: 12px 12px 0 0 rgba(42, 20, 16, 0.35);
 }
 
 /* Small card shadow — 8px offset */
 .clay-card-shadow-sm {
-  box-shadow: 8px 8px 0 0 rgba(62, 5, 0, 0.3);
+  box-shadow: 8px 8px 0 0 rgba(42, 20, 16, 0.25);
 }
 
 /* Button shadow — green bottom shadow (for tertiary buttons) */
 .clay-button-shadow {
-  box-shadow: 0 6px 0 0 #23501e;
+  box-shadow: 0 6px 0 0 #1a5a4c;
 }
 
 /* Button shadow active — pressed state */
 .clay-button-shadow-active {
-  box-shadow: 0 4px 0 0 #043405;
+  box-shadow: 0 4px 0 0 #0a3a2e;
 }
 
 /* Primary button shadow — terracotta bottom shadow */
 .clay-button-shadow-primary {
-  box-shadow: 0 6px 0 0 #5a0d02;
+  box-shadow: 0 6px 0 0 #2a1410;
 }
 
 /* Inset shadow — pressed/input field look */
@@ -128,5 +173,77 @@ body {
 
 /* Material Symbols configuration */
 .material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: 'liga';
   font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+}
+
+/* Beveled top edge — inner white highlight */
+.clay-beveled-top {
+  box-shadow: inset 0px 2px 0px 0px rgba(255, 255, 255, 0.4);
+}
+
+/* Active press — translate toward shadow */
+.active-press:active {
+  transform: translate(4px, 4px);
+  box-shadow: 0 0 0 0 rgba(0, 0, 0, 0) !important;
+}
+
+/* === Game Screen Utilities === */
+
+/* Clay slab — medium shadow for game panels */
+.clay-slab {
+  box-shadow: 6px 6px 0 0 rgba(0, 0, 0, 0.15);
+}
+
+/* Room pill colors */
+.clay-pill-business {
+  background-color: #504440;
+  box-shadow: 0 4px 0 0 #2a1410;
+}
+.clay-pill-leisure {
+  background-color: #f0e4cc;
+  box-shadow: 0 4px 0 0 #5a4a30;
+}
+.clay-slot-empty {
+  background-color: #f0ede8;
+  box-shadow: inset 2px 2px 0 0 rgba(0, 0, 0, 0.1);
+}
+
+/* Segment colors */
+.bg-segment-business { background-color: #475569; }
+.bg-segment-leisure { background-color: #d97706; }
+.bg-segment-corporate { background-color: #166534; }
+.bg-segment-transient { background-color: #7f1d1d; }
+
+/* Risk badge styles */
+.risk-low { background-color: #22c55e; box-shadow: 0 6px 0 0 #15803d; }
+.risk-medium { background-color: #f59e0b; box-shadow: 0 6px 0 0 #b45309; }
+.risk-high { background-color: #ef4444; box-shadow: 0 6px 0 0 #b91c1c; }
+
+/* === Page transition === */
+.page-enter {
+  animation: slide-up 0.35s ease-out both;
+}
+
+/* === Loading pulse for skeleton states === */
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+.skeleton-pulse {
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
 }

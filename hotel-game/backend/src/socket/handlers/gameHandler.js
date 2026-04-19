@@ -15,8 +15,82 @@ module.exports = function gameHandler(io, socket) {
       // Check if game is already running (reconnect case)
       const stateRaw = await redis.get(redisKeys.sessionState(session_id));
       if (stateRaw) {
-        // Game already in progress — just rejoined the room, events will reach us
+        // Game already in progress — rejoin and re-emit current state
         console.log(`[gameHandler] Rejoined room for active session ${session_id}`);
+        const state = JSON.parse(stateRaw);
+
+        const weekRepository = require('../../repositories/weekRepository');
+        const sessionRepository = require('../../repositories/sessionRepository');
+        const roomInventoryService = require('../../services/roomInventoryService');
+        const guestTimerManager = require('../../game/guestTimerManager');
+
+        const session = await sessionRepository.findById(session_id);
+        const weeks = await weekRepository.findAllBySession(session_id);
+        const currentWeek = weeks.find(w => w.week_number === state.currentWeek);
+
+        if (!currentWeek) {
+          console.log(`[gameHandler] No week data found — starting fresh`);
+          await weekOrchestrator.startGame(io, session_id, socket.user.id);
+          return;
+        }
+
+        // Case 1: Week already completed — advance to next week
+        if (currentWeek.status === 'completed') {
+          console.log(`[gameHandler] Week ${state.currentWeek} already completed — advancing`);
+          try {
+            await weekOrchestrator.advanceWeek(io, session_id, socket.user.id);
+          } catch (err) {
+            // Game might be fully done
+            console.log(`[gameHandler] Advance failed (game may be complete): ${err.message}`);
+            socket.emit('game:completed', {});
+          }
+          return;
+        }
+
+        // Case 2 & 3: Week still in progress — re-emit state
+        const guests = typeof currentWeek.guests_json === 'string'
+          ? JSON.parse(currentWeek.guests_json) : currentWeek.guests_json;
+
+        const MONTH_NAMES = [
+          'January', 'February', 'March', 'April', 'May', 'June',
+          'July', 'August', 'September', 'October', 'November', 'December',
+        ];
+        const monthName = MONTH_NAMES[(currentWeek.simulated_month || 1) - 1];
+        const calendar = await roomInventoryService.getCalendar(session_id, socket.user.id);
+        const gameMode = state.gameMode || session.game_mode || 'pricing';
+
+        const playerStateRepository = require('../../repositories/playerStateRepository');
+
+        // Get cumulative revenue from DB
+        const playerState = await playerStateRepository.findOne(session_id, socket.user.id);
+        const cumulativeRevenue = playerState ? parseFloat(playerState.total_revenue) : 0;
+
+        // Re-emit week:started with cumulative revenue
+        socket.emit('week:started', {
+          week_number: state.currentWeek,
+          month_name: monthName,
+          guest_count: guests ? guests.length : 0,
+          hotel_type: session.hotel_type,
+          demand_level: state.demandLevel || 'Medium',
+          calendar,
+          game_mode: gameMode,
+          suggested_prices: gameMode === 'pricing' ? require('../../game/weekOrchestrator')._computeSuggestedPrices(guests) : undefined,
+          cumulative_revenue: cumulativeRevenue,
+        });
+
+        console.log(`[gameHandler] Re-emitted week:started for week ${state.currentWeek} (mode: ${gameMode})`);
+
+        // Case 2: Classic mode — restart guest release from beginning
+        if (gameMode === 'classic' && guests && guests.length > 0) {
+          setTimeout(() => {
+            guestTimerManager.releaseNextGuest(
+              io, session_id, currentWeek.id, guests, 0,
+              weekOrchestrator.beginResolution
+            );
+          }, 2000);
+          console.log(`[gameHandler] Restarted classic guest timer for week ${state.currentWeek}`);
+        }
+
         return;
       }
 

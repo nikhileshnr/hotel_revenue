@@ -143,7 +143,7 @@ async function simulateWeek({ sessionId, weekId, userId, prices }) {
     guests_turned_away: turnedAway.length,
     guests_checked_out: guestsCheckedOut,
     cancellations,
-    no_shows,
+    no_shows: noShows,
     occupancy_rate: parseFloat((roomNightsSold / Math.max(1, totalRoomNights)).toFixed(4)),
     adr,
     revpar,

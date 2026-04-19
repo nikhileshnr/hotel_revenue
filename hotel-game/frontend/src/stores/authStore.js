@@ -10,8 +10,6 @@ const useAuthStore = create((set, get) => ({
 
   // Computed
   isAuthenticated: () => !!get().token,
-  isTeacher: () => get().user?.role === 'teacher',
-  isStudent: () => get().user?.role === 'student',
 
   // Actions
   login: async (email, password) => {
@@ -30,10 +28,10 @@ const useAuthStore = create((set, get) => ({
     }
   },
 
-  register: async (name, email, password, role = 'student') => {
+  register: async (name, email, password, branch) => {
     set({ loading: true, error: null });
     try {
-      const res = await api.post('/api/auth/register', { name, email, password, role });
+      const res = await api.post('/api/auth/register', { name, email, password, branch });
       const { token, user } = res.data;
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));

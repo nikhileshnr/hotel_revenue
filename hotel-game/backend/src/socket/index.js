@@ -2,6 +2,7 @@ const { Server } = require('socket.io');
 const jwt = require('jsonwebtoken');
 const userRepository = require('../repositories/userRepository');
 const gameHandler = require('./handlers/gameHandler');
+const decisionHandler = require('./handlers/decisionHandler');
 
 let io = null;
 
@@ -34,6 +35,7 @@ function initSocket(httpServer) {
     console.log(`[Socket] Connected: ${socket.user.name} (${socket.user.id})`);
 
     gameHandler(io, socket);
+    decisionHandler(io, socket);
 
     socket.on('disconnect', () => {
       console.log(`[Socket] Disconnected: ${socket.user.name}`);
@@ -44,8 +46,4 @@ function initSocket(httpServer) {
   return io;
 }
 
-function getIO() {
-  return io;
-}
-
-module.exports = { initSocket, getIO };
+module.exports = { initSocket };

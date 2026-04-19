@@ -1,0 +1,78 @@
+{
+  "model_version": "1.2.0",
+  "trained_date": "2026-03-22",
+  "inference_mode": "python_service",
+  "adr_feature_order": [
+    "hotel_encoded",
+    "room_tier",
+    "month_num",
+    "is_summer",
+    "is_weekend_arrival",
+    "los",
+    "total_guests",
+    "has_special_requests",
+    "is_repeated_guest",
+    "is_non_refund",
+    "lead_time_bucket",
+    "market_segment_encoded",
+    "customer_type_encoded"
+  ],
+  "segment_encode": {
+    "Aviation": 0,
+    "Complementary": 1,
+    "Corporate": 2,
+    "Direct": 3,
+    "Groups": 4,
+    "Offline TA/TO": 5,
+    "Online TA": 6
+  },
+  "customer_type_encode": {
+    "Transient": 0,
+    "Transient-Party": 1,
+    "Contract": 2,
+    "Group": 3
+  },
+  "adr_noise_std": {
+    "City Hotel": 20.16,
+    "Resort Hotel": 20.79
+  },
+  "los_cap": {
+    "City Hotel": 8,
+    "Resort Hotel": 14
+  },
+  "risk_badge_thresholds": {
+    "low": 0.25,
+    "high": 0.55
+  },
+  "revenue_formula": "net_adr * los + meal_cost * los",
+  "cancellation_revenue_recovery": {
+    "No Deposit": 0.0,
+    "Non Refund": 1.0,
+    "Refundable": 0.35
+  },
+  "cancel_feature_order": [
+    "is_non_refund",
+    "lead_time_bucket",
+    "has_prev_cancellations",
+    "is_repeated_guest",
+    "market_segment_encoded",
+    "has_special_requests",
+    "booking_changes",
+    "days_in_waiting_list",
+    "hotel_encoded",
+    "month_num",
+    "los",
+    "room_tier",
+    "lead_time",
+    "loyalty_score",
+    "customer_type_encoded"
+  ],
+  "noshow_feature_order": [
+    "hotel_encoded",
+    "lead_time_bucket",
+    "is_non_refund",
+    "market_segment_encoded",
+    "month_num",
+    "total_guests"
+  ]
+}

@@ -6,6 +6,17 @@ const HOTEL_INVENTORY = {
   resort: { standard: 12, mid: 8, premium: 6, suite: 4 },
 };
 
+// Smaller hotel for classic mode — manageable for one-by-one decisions
+const CLASSIC_INVENTORY = {
+  city: { standard: 5, mid: 4, premium: 3, suite: 2 },
+  resort: { standard: 4, mid: 3, premium: 2, suite: 2 },
+};
+
+function _getInventory(hotelType, gameMode) {
+  const inv = gameMode === 'classic' ? CLASSIC_INVENTORY : HOTEL_INVENTORY;
+  return inv[hotelType] || inv.city;
+}
+
 const TIER_TO_NAME = { 1: 'standard', 2: 'mid', 3: 'premium', 4: 'suite' };
 
 // --- Week Calendar helpers (Gap 5: LOS-aware inventory) ---
@@ -14,8 +25,8 @@ const TIER_TO_NAME = { 1: 'standard', 2: 'mid', 3: 'premium', 4: 'suite' };
  * Build a fresh 7-day calendar for a hotel type.
  * Each tier has an array of 7 values — each value = number of rooms available that day.
  */
-function _buildFreshCalendar(hotelType) {
-  const inv = HOTEL_INVENTORY[hotelType];
+function _buildFreshCalendar(hotelType, gameMode) {
+  const inv = _getInventory(hotelType, gameMode);
   const calendar = {};
   for (const [tierName, capacity] of Object.entries(inv)) {
     calendar[tierName] = Array(7).fill(capacity);
@@ -52,16 +63,16 @@ function _markOccupied(calendar, tierName, arrivalDay, los, guestIndex) {
 
 // --- Redis operations ---
 
-async function resetPlayerRooms(sessionId, userId, hotelType) {
-  const rooms = { ...HOTEL_INVENTORY[hotelType] };
-  const calendar = _buildFreshCalendar(hotelType);
+async function resetPlayerRooms(sessionId, userId, hotelType, gameMode = 'pricing') {
+  const rooms = { ..._getInventory(hotelType, gameMode) };
+  const calendar = _buildFreshCalendar(hotelType, gameMode);
   const key = redisKeys.playerRooms(sessionId, userId);
   await redis.set(key, JSON.stringify({ rooms, calendar }), 'EX', 7200);
 }
 
-async function resetAllPlayerRooms(sessionId, playerIds, hotelType) {
+async function resetAllPlayerRooms(sessionId, playerIds, hotelType, gameMode = 'pricing') {
   await Promise.all(
-    playerIds.map((userId) => resetPlayerRooms(sessionId, userId, hotelType))
+    playerIds.map((userId) => resetPlayerRooms(sessionId, userId, hotelType, gameMode))
   );
 }
 
@@ -208,6 +219,7 @@ async function occupyRoom(sessionId, userId, tier) {
 
 module.exports = {
   HOTEL_INVENTORY,
+  CLASSIC_INVENTORY,
   TIER_TO_NAME,
   resetPlayerRooms,
   resetAllPlayerRooms,

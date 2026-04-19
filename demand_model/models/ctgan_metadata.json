@@ -1,0 +1,55 @@
+{
+  "trained_date": "2026-03-22",
+  "training_rows": 219199,
+  "discrete_columns": [
+    "hotel_encoded",
+    "month_num",
+    "room_tier",
+    "meal",
+    "market_segment",
+    "customer_type",
+    "is_repeated_guest",
+    "has_special_requests",
+    "is_non_refund",
+    "previous_cancellations",
+    "lead_time_bucket"
+  ],
+  "continuous_columns": [
+    "los",
+    "total_guests"
+  ],
+  "column_order": [
+    "hotel_encoded",
+    "month_num",
+    "room_tier",
+    "los",
+    "meal",
+    "market_segment",
+    "customer_type",
+    "total_guests",
+    "is_repeated_guest",
+    "has_special_requests",
+    "is_non_refund",
+    "previous_cancellations",
+    "lead_time_bucket"
+  ],
+  "los_cap": {
+    "city": 9,
+    "resort": 14
+  },
+  "market_segment_encoding": {
+    "Aviation": 0,
+    "Complementary": 1,
+    "Corporate": 2,
+    "Direct": 3,
+    "Groups": 4,
+    "Offline TA/TO": 5,
+    "Online TA": 6
+  },
+  "customer_type_encoding": {
+    "Transient": 0,
+    "Transient-Party": 1,
+    "Contract": 2,
+    "Group": 3
+  }
+}

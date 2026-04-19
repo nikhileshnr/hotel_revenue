@@ -1,0 +1,102 @@
+{
+  "City Hotel": {
+    "January": {
+      "mu": 64.41,
+      "alpha": 0.365
+    },
+    "February": {
+      "mu": 88.12,
+      "alpha": 0.2499
+    },
+    "March": {
+      "mu": 102.32,
+      "alpha": 0.1203
+    },
+    "April": {
+      "mu": 123.46,
+      "alpha": 0.1493
+    },
+    "May": {
+      "mu": 126.87,
+      "alpha": 0.1474
+    },
+    "June": {
+      "mu": 133.13,
+      "alpha": 0.185
+    },
+    "July": {
+      "mu": 101.06,
+      "alpha": 0.3293
+    },
+    "August": {
+      "mu": 126.4,
+      "alpha": 0.2858
+    },
+    "September": {
+      "mu": 174.67,
+      "alpha": 0.2635
+    },
+    "October": {
+      "mu": 171.47,
+      "alpha": 0.3707
+    },
+    "November": {
+      "mu": 96.46,
+      "alpha": 0.5332
+    },
+    "December": {
+      "mu": 92.82,
+      "alpha": 0.748
+    }
+  },
+  "Resort Hotel": {
+    "January": {
+      "mu": 37.49,
+      "alpha": 0.2902
+    },
+    "February": {
+      "mu": 57.0,
+      "alpha": 0.3405
+    },
+    "March": {
+      "mu": 56.11,
+      "alpha": 0.2189
+    },
+    "April": {
+      "mu": 61.72,
+      "alpha": 0.2461
+    },
+    "May": {
+      "mu": 57.92,
+      "alpha": 0.1722
+    },
+    "June": {
+      "mu": 48.37,
+      "alpha": 0.0691
+    },
+    "July": {
+      "mu": 62.74,
+      "alpha": 0.157
+    },
+    "August": {
+      "mu": 67.7,
+      "alpha": 0.2183
+    },
+    "September": {
+      "mu": 74.14,
+      "alpha": 0.2478
+    },
+    "October": {
+      "mu": 79.59,
+      "alpha": 0.2917
+    },
+    "November": {
+      "mu": 56.67,
+      "alpha": 0.2548
+    },
+    "December": {
+      "mu": 59.72,
+      "alpha": 0.6674
+    }
+  }
+}

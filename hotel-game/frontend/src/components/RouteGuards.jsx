@@ -17,15 +17,13 @@ export function ProtectedRoute({ children }) {
 
 /**
  * Redirects authenticated users away from public routes (e.g., login).
- * Teachers go to /dashboard, students go to /student-dashboard.
+ * Always redirects to /dashboard.
  */
 export function PublicRoute({ children }) {
   const token = useAuthStore((state) => state.token);
-  const user = useAuthStore((state) => state.user);
 
-  if (token && user) {
-    const redirectTo = user.role === 'teacher' ? '/dashboard' : '/student-dashboard';
-    return <Navigate to={redirectTo} replace />;
+  if (token) {
+    return <Navigate to="/dashboard" replace />;
   }
 
   return children;

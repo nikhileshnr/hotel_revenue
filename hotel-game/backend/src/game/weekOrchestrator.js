@@ -4,6 +4,7 @@ const gameService = require('../services/gameService');
 const roomInventoryService = require('../services/roomInventoryService');
 const leaderboardService = require('../services/leaderboardService');
 const pricingService = require('../services/pricingService');
+const weekResolutionService = require('../services/weekResolutionService');
 const sessionRepository = require('../repositories/sessionRepository');
 const weekRepository = require('../repositories/weekRepository');
 const playerStateRepository = require('../repositories/playerStateRepository');
@@ -11,6 +12,7 @@ const weeklyScoreRepository = require('../repositories/weeklyScoreRepository');
 const bookingRepository = require('../repositories/bookingRepository');
 const { generateWeekGuests } = require('../demand/guestFactory');
 const { getVolumeParams } = require('../demand/modelLoader');
+const guestTimerManager = require('./guestTimerManager');
 
 const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -26,13 +28,14 @@ async function startGame(io, sessionId, requestingUserId) {
 
   // Reset room inventory for all players
   const playerIds = players.map((p) => p.user_id);
-  await roomInventoryService.resetAllPlayerRooms(sessionId, playerIds, session.hotel_type);
+  await roomInventoryService.resetAllPlayerRooms(sessionId, playerIds, session.hotel_type, session.game_mode || 'pricing');
 
   // Emit game started
   io.to(`session:${sessionId}`).emit('game:started', {
     session_id: sessionId,
     hotel_type: session.hotel_type,
     total_weeks: session.total_weeks,
+    game_mode: session.game_mode || 'pricing',
   });
 
   // Start the first week
@@ -40,12 +43,81 @@ async function startGame(io, sessionId, requestingUserId) {
 }
 
 async function _startWeek(io, session, weekNumber) {
-  // Compute simulated month
-  const month = ((session.simulated_month + weekNumber - 2) % 12) + 1;
+  // Compute simulated month — 4 weeks per month
+  const monthOffset = Math.floor((weekNumber - 1) / 4);
+  const month = ((session.simulated_month - 1 + monthOffset) % 12) + 1;
   const monthName = MONTH_NAMES[month - 1];
 
   // Generate guests via demand layer
-  const guests = await generateWeekGuests(session.hotel_type, month);
+  let guests = await generateWeekGuests(session.hotel_type, month);
+
+  // ─── Filter by segment config ──────────────────────────────────────────
+  // Map frontend toggle keys → actual market_segment values
+  const SEGMENT_GROUP_MAP = {
+    corporate: ['Corporate'],
+    leisure: ['Groups', 'Offline TA/TO'],
+    transient: ['Online TA', 'Direct'],
+    premium: ['Aviation', 'Complementary'],
+  };
+
+  try {
+    const segJson = await redis.get(`session:${session.id}:segments`);
+    if (segJson) {
+      const segments = JSON.parse(segJson);
+      const disabledSegments = [];
+      for (const [key, enabled] of Object.entries(segments)) {
+        if (enabled === false && SEGMENT_GROUP_MAP[key]) {
+          disabledSegments.push(...SEGMENT_GROUP_MAP[key]);
+        }
+      }
+      if (disabledSegments.length > 0) {
+        const before = guests.length;
+        guests = guests.filter(g => !disabledSegments.includes(g.market_segment));
+        console.log(`[weekOrchestrator] Segment filter: ${before} → ${guests.length} guests (disabled: ${disabledSegments.join(', ')})`);
+      }
+    }
+  } catch (err) {
+    console.warn('[weekOrchestrator] Segment filter error (proceeding with all guests):', err.message);
+  }
+
+  // Determine game mode and demand level early (needed for classic trimming)
+  const gameMode = session.game_mode || 'pricing';
+  const demandLevel = _computeDemandLevel(session.hotel_type, month);
+
+  // ─── Classic mode: trim guest count proportional to actual generated volume ─
+  if (gameMode === 'classic') {
+    const originalCount = guests.length;
+    // Take ~12% of generated guests (±2% jitter), clamped to playable range
+    const ratio = 0.10 + Math.random() * 0.04; // 10-14%
+    const targetCount = Math.max(8, Math.min(35, Math.round(originalCount * ratio)));
+
+    if (guests.length > targetCount) {
+      // Stratified sampling: preserve segment diversity
+      const bySegment = {};
+      for (const g of guests) {
+        const seg = g.market_segment || 'Other';
+        if (!bySegment[seg]) bySegment[seg] = [];
+        bySegment[seg].push(g);
+      }
+
+      // Proportional allocation per segment
+      const sampled = [];
+      const segments = Object.keys(bySegment);
+      for (const seg of segments) {
+        const pool = bySegment[seg];
+        const allocation = Math.max(1, Math.round((pool.length / originalCount) * targetCount));
+        const shuffled = pool.sort(() => Math.random() - 0.5);
+        sampled.push(...shuffled.slice(0, allocation));
+      }
+
+      // Trim to exact target
+      guests = sampled.slice(0, targetCount);
+
+      // Re-index
+      guests.forEach((g, i) => { g.index = i; });
+      console.log(`[weekOrchestrator] Classic mode: ${originalCount} generated → ${guests.length} trimmed (${(ratio * 100).toFixed(0)}% ratio, demand: ${demandLevel})`);
+    }
+  }
 
   // Insert week record
   const week = await weekRepository.insert({
@@ -56,13 +128,14 @@ async function _startWeek(io, session, weekNumber) {
     guest_count: guests.length,
   });
 
-  // Set session state in Redis — AWAITING PRICES (not active)
+  // Set session state in Redis
   await redis.set(
     redisKeys.sessionState(session.id),
     JSON.stringify({
-      status: 'awaiting_prices',
+      status: gameMode === 'pricing' ? 'awaiting_prices' : 'active',
       currentWeek: weekNumber,
       weekId: week.id,
+      gameMode,
     }),
     'EX', 7200
   );
@@ -70,36 +143,57 @@ async function _startWeek(io, session, weekNumber) {
   // Reset room inventory for the new week
   const players = await sessionRepository.getPlayers(session.id);
   const playerIds = players.map((p) => p.user_id);
-  await roomInventoryService.resetAllPlayerRooms(session.id, playerIds, session.hotel_type);
+  await roomInventoryService.resetAllPlayerRooms(session.id, playerIds, session.hotel_type, gameMode);
 
   // Refresh TTLs
   await _refreshSessionTTLs(session.id, playerIds, weekNumber);
 
-  // Compute demand level signal
-  const demandLevel = _computeDemandLevel(session.hotel_type, month);
-
   // Get initial calendar for display
   const calendar = await roomInventoryService.getCalendar(session.id, playerIds[0]);
 
-  // Compute suggested price ranges based on guest ADR distribution
-  const suggestedPrices = _computeSuggestedPrices(guests);
+  if (gameMode === 'pricing') {
+    // ─── PRICING MODE ───────────────────────────────────────────────────
+    const suggestedPrices = _computeSuggestedPrices(guests);
 
-  // Emit week started — frontend shows pricing interface
-  io.to(`session:${session.id}`).emit('week:started', {
-    week_number: weekNumber,
-    month_name: monthName,
-    guest_count: guests.length,
-    hotel_type: session.hotel_type,
-    demand_level: demandLevel,
-    calendar,
-    suggested_prices: suggestedPrices,
-  });
+    io.to(`session:${session.id}`).emit('week:started', {
+      week_number: weekNumber,
+      month_name: monthName,
+      guest_count: guests.length,
+      hotel_type: session.hotel_type,
+      demand_level: demandLevel,
+      calendar,
+      suggested_prices: suggestedPrices,
+      game_mode: 'pricing',
+    });
 
-  console.log(`[WeekOrchestrator] Week ${weekNumber} started — awaiting prices (${guests.length} guests generated, demand: ${demandLevel})`);
+    console.log(`[WeekOrchestrator] Week ${weekNumber} started — PRICING mode, awaiting prices (${guests.length} guests generated, demand: ${demandLevel})`);
+  } else {
+    // ─── CLASSIC MODE ───────────────────────────────────────────────────
+    io.to(`session:${session.id}`).emit('week:started', {
+      week_number: weekNumber,
+      month_name: monthName,
+      guest_count: guests.length,
+      hotel_type: session.hotel_type,
+      demand_level: demandLevel,
+      calendar,
+      game_mode: 'classic',
+    });
+
+    console.log(`[WeekOrchestrator] Week ${weekNumber} started — CLASSIC mode (${guests.length} guests, demand: ${demandLevel})`);
+
+    // After a short delay, start releasing guests one by one
+    setTimeout(() => {
+      guestTimerManager.releaseNextGuest(
+        io, session.id, week.id, guests, 0,
+        beginResolution
+      );
+    }, 2000);
+  }
 }
 
 /**
  * Called when player submits prices via socket. Runs the simulation.
+ * Only applicable in PRICING mode.
  */
 async function submitPricesAndSimulate(io, sessionId, userId, prices) {
   // 1. Validate session state
@@ -183,6 +277,114 @@ async function submitPricesAndSimulate(io, sessionId, userId, prices) {
   console.log(`[WeekOrchestrator] Week ${state.currentWeek} results — Revenue: $${simResults.week_revenue}, Booked: ${simResults.guests_booked}, Turned away: ${simResults.guests_turned_away}`);
 }
 
+/**
+ * Called after all guests have been processed in CLASSIC mode.
+ * Resolves bookings (cancellations, no-shows) and emits week:results.
+ */
+async function beginResolution(io, sessionId, weekId) {
+  console.log(`[WeekOrchestrator] Begin resolution for week ${weekId} (classic mode)`);
+
+  const stateRaw = await redis.get(redisKeys.sessionState(sessionId));
+  const state = stateRaw ? JSON.parse(stateRaw) : {};
+  const weekNum = state.currentWeek || 1;
+
+  // Get all accepted bookings for this week
+  const acceptedBookings = await bookingRepository.findAccepted(weekId);
+
+  // Load guests
+  const week = await weekRepository.findById(weekId);
+  const guests_json = typeof week.guests_json === 'string'
+    ? JSON.parse(week.guests_json) : week.guests_json;
+
+  // Get session for hotel type
+  const session = await sessionRepository.findById(sessionId);
+  const hotelType = session.hotel_type || 'city';
+
+  // Resolve outcomes (cancellations, no-shows, checkouts)
+  const resolvedOutcomes = weekResolutionService.resolveBookings(acceptedBookings, guests_json);
+  const playerStats = weekResolutionService.aggregateByPlayer(resolvedOutcomes, hotelType);
+
+  // Update each booking with its outcome
+  for (const r of resolvedOutcomes) {
+    await bookingRepository.updateOutcome(r.bookingId, {
+      outcome: r.outcome,
+      revenue_realized: r.revenue_realized,
+      resolved_at: new Date(),
+    });
+  }
+
+  // Update player state and emit results per player
+  const players = await sessionRepository.getPlayers(sessionId);
+  const allBookings = await bookingRepository.getWeekBreakdown(weekId, players[0]?.user_id);
+  const totalGuests = guests_json.length;
+  const results = {};
+
+  for (const player of players) {
+    const userId = player.user_id;
+    const stats = playerStats[userId] || {
+      week_revenue: 0, cancellations: 0, no_shows: 0, guests_accepted: 0, occupancy_rate: 0,
+    };
+
+    // Count rejections and timeouts for this player
+    const playerBookings = await bookingRepository.getWeekBreakdown(weekId, userId);
+    const accepted = playerBookings.filter(b => b.decision === 'accepted').length;
+    const rejected = playerBookings.filter(b => b.decision === 'rejected').length;
+    const timedOut = playerBookings.filter(b => b.decision === 'timeout').length;
+    const checkedOut = resolvedOutcomes.filter(r => r.userId === userId && r.outcome === 'checked_out').length;
+
+    // Round revenue
+    const weekRevenue = parseFloat(stats.week_revenue.toFixed(2));
+
+    // Update player state
+    await playerStateRepository.incrementRevenue(sessionId, userId, weekRevenue);
+    const playerState = await playerStateRepository.findOne(sessionId, userId);
+
+    // Insert weekly score
+    await weeklyScoreRepository.insert({
+      session_id: sessionId,
+      week_id: weekId,
+      user_id: userId,
+      week_revenue: weekRevenue,
+      cumulative_revenue: parseFloat(playerState.total_revenue),
+      guests_accepted: accepted,
+      guests_rejected: rejected + timedOut,
+      cancellations: stats.cancellations,
+      no_shows: stats.no_shows,
+      occupancy_rate: stats.occupancy_rate,
+    });
+
+    results[userId] = {
+      user_id: userId,
+      name: player.name || 'Player',
+      week_revenue: weekRevenue,
+      cumulative_revenue: parseFloat(playerState.total_revenue),
+      guests_booked: accepted,
+      guests_turned_away: rejected + timedOut,
+      guests_checked_out: checkedOut,
+      cancellations: stats.cancellations,
+      no_shows: stats.no_shows,
+      occupancy_rate: stats.occupancy_rate,
+      total_guests: totalGuests,
+    };
+  }
+
+  // Update week status
+  await weekRepository.updateStatus(weekId, 'completed', { ended_at: new Date() });
+
+  // Build leaderboard
+  const leaderboard = await leaderboardService.getSessionLeaderboard(sessionId);
+
+  // Emit results
+  io.to(`session:${sessionId}`).emit('week:results', {
+    week_number: weekNum,
+    results,
+    leaderboard,
+    game_mode: 'classic',
+  });
+
+  console.log(`[WeekOrchestrator] Classic mode week ${weekNum} resolved`);
+}
+
 async function advanceWeek(io, sessionId, requestingUserId) {
   const result = await gameService.validateAndAdvanceWeek(sessionId, requestingUserId);
 
@@ -255,7 +457,7 @@ function _computeSuggestedPrices(guests) {
       continue;
     }
     adrs.sort((a, b) => a - b);
-    const min = Math.round(adrs[0]);
+    const min = Math.max(1, Math.round(adrs[0]));
     const max = Math.round(adrs[adrs.length - 1]);
     const median = Math.round(adrs[Math.floor(adrs.length / 2)]);
     suggested[tierName] = { min, max, median, count: adrs.length };
@@ -264,4 +466,4 @@ function _computeSuggestedPrices(guests) {
   return suggested;
 }
 
-module.exports = { startGame, advanceWeek, submitPricesAndSimulate };
+module.exports = { startGame, advanceWeek, submitPricesAndSimulate, beginResolution, _computeSuggestedPrices };
