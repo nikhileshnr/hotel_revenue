@@ -29,27 +29,19 @@ hotel-game/
 CREATE DATABASE hotel_game CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
-### Step 2: Backend
+### Step 2: Redis
+
+Make sure Redis is running before starting the backend:
 
 ```bash
-cd hotel-game/backend
+# Windows (if installed as service):
+redis-server
 
-# Create .env from example
-cp .env.example .env
-# Edit .env — set your MySQL password and a secure JWT secret
-
-# Install dependencies
-npm install
-
-# Run database migrations (creates all tables)
-npm run migrate
-
-# Start backend server
-npm run dev
-# → Server listening on http://localhost:3000
+# Docker:
+docker run -d -p 6379:6379 redis
 ```
 
-### Step 3: Profile Service (Python)
+### Step 3: Profile Service (Python — one-time setup)
 
 ```bash
 cd profile-service
@@ -68,16 +60,39 @@ pip install -r requirements.txt
 
 # Create .env from example
 cp .env.example .env
-
-# Start the service
-uvicorn main:app --reload --port 8000
-# → Profile service on http://localhost:8000
-# Note: First startup takes 45-60s to load CTGAN + LightGBM models
 ```
 
-> **Note:** The profile service is optional. If it's not running, the backend automatically falls back to the Node.js ONNX-based statistical sampler.
+> You do **not** need to start the profile service manually — the backend launches it automatically (see Step 4).
 
-### Step 4: Frontend
+### Step 4: Backend
+
+```bash
+cd hotel-game/backend
+
+# Create .env from example
+cp .env.example .env
+# Edit .env — set your MySQL password and a secure JWT secret
+
+# Install dependencies
+npm install
+
+# Run database migrations (creates all tables)
+npm run migrate
+
+# Start backend + profile service together
+npm run dev
+# → [profile-service] Uvicorn running on http://0.0.0.0:8000
+# → [backend] Server listening on http://localhost:3000
+```
+
+`npm run dev` runs `start-all.js` which:
+1. Spawns the Python profile service (`uvicorn`) from `profile-service/venv/`
+2. Waits for the `/health` endpoint to respond (up to 30 retries)
+3. Then starts the Node.js backend with `nodemon`
+
+> If the profile service fails to start, the backend continues using the ONNX fallback sampler.
+
+### Step 5: Frontend
 
 ```bash
 cd hotel-game/frontend
@@ -93,25 +108,13 @@ npm run dev
 # → Frontend on http://localhost:5173
 ```
 
-### Step 5: Start Playing
+### Step 6: Start Playing
 
 1. Open `http://localhost:5173` in your browser
 2. Register a new account
 3. Click **New Session** on the Dashboard
 4. Choose hotel type (City/Resort), game mode (Classic/Pricing), and week count
 5. Click **Launch** — the game starts immediately
-
-## Redis
-
-Make sure Redis is running before starting the backend:
-
-```bash
-# Windows (if installed as service):
-redis-server
-
-# Docker:
-docker run -d -p 6379:6379 redis
-```
 
 ## Project Structure
 
@@ -128,7 +131,7 @@ docker run -d -p 6379:6379 redis
 │   │   ├── 07_noshow.py           # No-show model (LightGBM)
 │   │   ├── 08_export.py           # Export to ONNX + JSON
 │   │   └── 10_validate.py         # End-to-end validation
-│   ├── models/                    # Trained model artifacts
+│   ├── models/                    # Trained model artifacts (included)
 │   │   ├── ctgan_model.pkl        # CTGAN generator (~20MB)
 │   │   ├── cancel_model.pkl       # Calibrated cancellation model
 │   │   ├── adr_model_city.pkl     # City hotel ADR predictor
@@ -150,7 +153,7 @@ docker run -d -p 6379:6379 redis
 │   │   │   ├── socket/            # Socket.io event handlers
 │   │   │   └── middleware/        # JWT auth middleware
 │   │   ├── models/                # ONNX model files for Node.js inference
-│   │   ├── scripts/               # Utility scripts (start-all, seed)
+│   │   ├── scripts/start-all.js   # Launches profile-service + backend
 │   │   └── .env.example
 │   │
 │   └── frontend/                  # React SPA
