@@ -241,6 +241,7 @@ async function submitPricesAndSimulate(io, sessionId, userId, prices) {
     cancellations: simResults.cancellations,
     no_shows: simResults.no_shows,
     occupancy_rate: simResults.occupancy_rate,
+    prices_json: JSON.stringify(simResults.prices_submitted),
   });
 
   // 6. Update week status

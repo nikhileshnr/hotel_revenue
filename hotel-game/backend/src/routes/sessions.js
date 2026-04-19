@@ -182,6 +182,7 @@ router.get('/:id/insights', async (req, res, next) => {
     }
 
     // Compute optimal prices per tier (price that maximizes revenue)
+    // ─── Aggregate (kept for backward compat) ───
     const optimalPrices = {};
     for (const [tier, adrs] of Object.entries(tierAdrDist)) {
       if (adrs.length === 0) { optimalPrices[tier] = 0; continue; }
@@ -197,6 +198,57 @@ router.get('/:id/insights', async (req, res, next) => {
         }
       }
       optimalPrices[tier] = Math.round(bestPrice);
+    }
+
+    // ─── Per-week optimal prices ───
+    // Build a lookup of player-set prices per week from weekly_scores
+    const playerPricesMap = {};
+    for (const h of history) {
+      if (h.prices_json) {
+        const parsed = typeof h.prices_json === 'string' ? JSON.parse(h.prices_json) : h.prices_json;
+        playerPricesMap[parseInt(h.week_number, 10)] = parsed;
+      }
+    }
+
+    const weeklyOptimalPrices = [];
+    for (const week of weeks) {
+      const guests = typeof week.guests_json === 'string'
+        ? JSON.parse(week.guests_json)
+        : week.guests_json;
+      if (!guests || guests.length === 0) continue;
+
+      const weekTierAdrs = { standard: [], mid: [], premium: [], suite: [] };
+      for (const g of guests) {
+        const tier = tierMap[g.room_tier] || 'standard';
+        weekTierAdrs[tier].push(g.adr_predicted || 0);
+      }
+
+      const weekOptimal = {};
+      let weekOptimalRevenue = 0;
+      for (const [tier, adrs] of Object.entries(weekTierAdrs)) {
+        if (adrs.length === 0) { weekOptimal[tier] = 0; continue; }
+        adrs.sort((a, b) => a - b);
+        let bestPrice = 0, bestRev = 0;
+        for (let i = 0; i < adrs.length; i++) {
+          const price = adrs[i];
+          const willing = adrs.filter(a => a >= price).length;
+          const rev = price * willing;
+          if (rev > bestRev) {
+            bestRev = rev;
+            bestPrice = price;
+          }
+        }
+        weekOptimal[tier] = Math.round(bestPrice);
+        weekOptimalRevenue += bestRev;
+      }
+
+      weeklyOptimalPrices.push({
+        week_number: week.week_number,
+        prices: weekOptimal,
+        player_prices: playerPricesMap[week.week_number] || null,
+        guest_count: guests.length,
+        optimal_revenue: Math.round(weekOptimalRevenue),
+      });
     }
 
     // Summary stats
@@ -349,6 +401,7 @@ router.get('/:id/insights', async (req, res, next) => {
         }])
       ),
       optimalPrices,
+      weeklyOptimalPrices,
       strategyProfile,
       strategyDescription,
       keyTakeaway,

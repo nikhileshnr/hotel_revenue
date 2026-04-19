@@ -452,7 +452,7 @@ function PricingTab({ insights }) {
                 </div>
                 <div className="flex justify-between text-[8px] text-outline mt-1">
                   <span>Avg WTP: ${stats.avg}</span>
-                  <span className="text-tertiary font-black">Optimal: ${optimal}/night</span>
+                  <span className="text-tertiary font-black">Avg Optimal: ${optimal}</span>
                 </div>
               </div>
             </div>
@@ -539,47 +539,127 @@ function SegmentsTab({ insights }) {
 // ─── Optimal Strategy Tab (Pricing Mode only) ───────────────────────────
 
 function OptimalTab({ insights }) {
-  if (!insights?.optimalPrices) return <EmptyState />;
+  if (!insights?.weeklyOptimalPrices || insights.weeklyOptimalPrices.length === 0) return <EmptyState />;
+
+  const weeklyData = insights.weeklyOptimalPrices;
+  const totalOptimalRevenue = weeklyData.reduce((s, w) => s + (w.optimal_revenue || 0), 0);
 
   return (
     <>
       <h2 className="text-2xl font-black font-headline text-on-surface uppercase tracking-tight">
-        Revenue-Maximizing Prices
+        Week-by-Week Optimal Prices
       </h2>
       <p className="text-outline text-sm font-bold -mt-4 mb-4">
-        These are the per-night prices that would have maximized total revenue given the guest demand pool.
+        The price per tier that would have maximized revenue each week, based on that week's guest demand pool.
       </p>
 
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {Object.entries(insights.optimalPrices).map(([tierName, optPrice]) => {
-          const display = TIER_DISPLAY[tierName];
-          const tierData = insights.tierAdrDistribution?.[tierName];
+      {/* Summary card */}
+      <section className="bg-tertiary-container p-6 rounded-[2rem] shadow-[6px_6px_0px_0px_#1a5a4c] mb-2">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-[10px] uppercase font-black tracking-widest text-on-tertiary-container/60">Total Optimal Revenue (all weeks)</p>
+            <p className="text-3xl font-black text-on-tertiary-container">${totalOptimalRevenue.toLocaleString()}</p>
+          </div>
+          <span className="material-symbols-outlined text-5xl text-on-tertiary-container/20">trending_up</span>
+        </div>
+      </section>
+
+      {/* Per-week cards */}
+      <section className="space-y-5">
+        {weeklyData.map((week) => {
+          const tiers = Object.entries(week.prices).filter(([t, p]) => TIER_DISPLAY[t] && p > 0);
+          const maxPrice = Math.max(...tiers.map(([, p]) => p), ...tiers.map(([t]) => week.player_prices?.[t] || 0));
+
           return (
-            <div key={tierName} className="bg-surface-container-low p-6 rounded-[2rem] shadow-[0_8px_0_0_#dbdad7]">
-              <div className="flex items-center justify-between mb-4">
+            <div key={week.week_number} className="bg-surface-container-low rounded-[2rem] shadow-[0_6px_0_0_#dbdad7] overflow-hidden">
+              {/* Week header */}
+              <div className="flex items-center justify-between px-6 py-4 bg-surface-container-highest/50">
                 <div className="flex items-center gap-3">
-                  <div className={`w-12 h-12 ${display.color} rounded-xl flex items-center justify-center`}>
-                    <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>{display.icon}</span>
+                  <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-[3px_3px_0px_0px_#2a1410]">
+                    <span className="text-sm font-black text-white">{week.week_number}</span>
                   </div>
                   <div>
-                    <h3 className="font-black text-lg text-on-surface">{display.label}</h3>
-                    <p className="text-[9px] text-outline font-bold">{tierData?.count || 0} guests in market</p>
+                    <h3 className="font-black text-sm text-on-surface">Week {week.week_number}</h3>
+                    <p className="text-[9px] text-outline font-bold">{week.guest_count} guests in demand pool</p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-3xl font-black text-tertiary">${optPrice}</p>
-                  <p className="text-[8px] text-outline font-bold uppercase">optimal per night</p>
+                  <p className="text-lg font-black text-tertiary">${week.optimal_revenue.toLocaleString()}</p>
+                  <p className="text-[8px] text-outline font-bold uppercase">max revenue</p>
                 </div>
               </div>
 
-              {tierData && (
-                <div className="bg-surface-container-highest p-3 rounded-xl clay-inset-shadow">
-                  <div className="flex justify-between text-[9px] font-bold">
-                    <span className="text-outline">Market range: ${tierData.min} – ${tierData.max}</span>
-                    <span className="text-outline">Median WTP: ${tierData.median}</span>
-                  </div>
-                </div>
-              )}
+              {/* Tier comparison rows */}
+              <div className="px-6 py-4 space-y-4">
+                {tiers.map(([tierName, optPrice]) => {
+                  const display = TIER_DISPLAY[tierName];
+                  const playerPrice = week.player_prices?.[tierName];
+                  const hasPlayer = playerPrice != null;
+                  const diff = hasPlayer ? playerPrice - optPrice : 0;
+                  const diffPct = optPrice > 0 ? Math.abs(diff / optPrice) * 100 : 0;
+                  const isClose = diffPct <= 15;
+                  const playerBarW = hasPlayer ? Math.min(100, (playerPrice / Math.max(1, maxPrice)) * 100) : 0;
+                  const optBarW = Math.min(100, (optPrice / Math.max(1, maxPrice)) * 100);
+
+                  return (
+                    <div key={tierName}>
+                      {/* Tier label */}
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className={`w-6 h-6 ${display.color} rounded-lg flex items-center justify-center`}>
+                          <span className="material-symbols-outlined text-[11px]" style={{ fontVariationSettings: "'FILL' 1" }}>{display.icon}</span>
+                        </div>
+                        <span className="text-xs font-black text-on-surface uppercase tracking-wide">{display.label}</span>
+                        {hasPlayer && (
+                          <span className={`ml-auto text-[10px] font-black px-2.5 py-0.5 rounded-full ${
+                            isClose
+                              ? 'bg-tertiary/15 text-tertiary'
+                              : diff > 0
+                                ? 'bg-amber-100 text-amber-700'
+                                : 'bg-error/10 text-error'
+                          }`}>
+                            {isClose ? '✓ On target' : diff > 0 ? `$${diff} over` : `$${Math.abs(diff)} under`}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Dual price bars */}
+                      <div className="space-y-1.5 pl-8">
+                        {/* Player bar */}
+                        <div className="flex items-center gap-3">
+                          <span className="text-[9px] font-bold text-outline uppercase w-12 shrink-0">You</span>
+                          <div className="flex-1 h-5 bg-surface-container-highest rounded-full overflow-hidden relative">
+                            {hasPlayer ? (
+                              <div
+                                className={`h-full rounded-full transition-all ${isClose ? 'bg-secondary' : diff > 0 ? 'bg-amber-400' : 'bg-primary/60'}`}
+                                style={{ width: `${playerBarW}%` }}
+                              />
+                            ) : (
+                              <div className="h-full flex items-center pl-3">
+                                <span className="text-[9px] text-outline italic">not recorded</span>
+                              </div>
+                            )}
+                          </div>
+                          <span className={`text-sm font-black w-14 text-right ${hasPlayer ? 'text-on-surface' : 'text-outline'}`}>
+                            {hasPlayer ? `$${playerPrice}` : '—'}
+                          </span>
+                        </div>
+
+                        {/* Optimal bar */}
+                        <div className="flex items-center gap-3">
+                          <span className="text-[9px] font-bold text-tertiary uppercase w-12 shrink-0">Best</span>
+                          <div className="flex-1 h-5 bg-surface-container-highest rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-tertiary rounded-full transition-all"
+                              style={{ width: `${optBarW}%` }}
+                            />
+                          </div>
+                          <span className="text-sm font-black text-tertiary w-14 text-right">${optPrice}</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           );
         })}
@@ -589,10 +669,10 @@ function OptimalTab({ insights }) {
       <section className="bg-tertiary p-8 rounded-[2rem] shadow-[0_8px_0_0_#1a5a4c] text-white">
         <h3 className="text-sm font-black uppercase tracking-widest mb-3 text-tertiary-fixed">How Optimal Pricing Works</h3>
         <p className="font-medium leading-relaxed">
-          The optimal price for each tier is calculated by finding the price point that maximizes
+          Each week, the optimal price for each tier is calculated by finding the price point that maximizes
           <strong> total revenue = price × number of guests willing to pay that price</strong>.
-          Setting prices too high loses volume; too low leaves money on the table.
-          The sweet spot balances occupancy with yield — this is the core of revenue management.
+          Because guest demand changes weekly (seasonal patterns, different market segments),
+          the optimal price shifts too — this is why <strong>dynamic pricing</strong> outperforms fixed pricing in hotel revenue management.
         </p>
       </section>
     </>
